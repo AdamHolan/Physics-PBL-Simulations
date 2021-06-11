@@ -6,8 +6,8 @@ https://www.python.org/downloads/
 
 Step 2: Open up CMD and type in
   `pip install pygame`
-and press enter. let it install
+and press enter. let it install.
 
-Step 3: Run the python file for the simulation you want to run
+Step 3: Run the python file for the simulation you want to run.
 
-Alternatively, if you don't want to install python, .exe's of each simulation will be in the builds section
+Alternatively, if you don't want to install python, .exe's of each simulation will be in the builds section.
