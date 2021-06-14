@@ -1,4 +1,3 @@
-# Anika Jade Tan
 import pygame
 import random as r
 import math as m
@@ -17,8 +16,8 @@ yellow = (255, 255, 0)
 pygame.init()
 
 # screen dimensions
-width = 800
-height = 800
+width = 1200
+height = 900
 
 # # Generate random colour. Looks pretty and saves time hardcoding stuff idk
 # def randColour():
@@ -37,15 +36,37 @@ done = False
 clock = pygame.time.Clock()
 
 # Specific Globals
-numParticles = 50
+numParticles = 10
 boltzmannConstant = 1.380649 * 10 ** -23
 energyList = []
+
+visualtext = []
+font = pygame.font.Font('freesansbold.ttf', 24)
+visualtext.append(font.render('Press to Disable Visuals', True, white, black))
+visualtext.append(font.render('I -> Particles ', True,          white, black))
+visualtext.append(font.render('P -> Photons ', True,            white, black))
+visualtext.append(font.render( 'O -> Collision Points' , True,  white, black))
+
+# in reverse order to work with positioning
+physicstext = []
+physicstext.append(font.render('                                     ', True,   white, black)) 
+physicstext.append(font.render('Click to add a Particle Pair at any Location',               True,   white, black))
+physicstext.append(font.render('                                     ', True,   white, black)) 
+physicstext.append(font.render('Press Space to Add a Particle Pair Randomly',      True,   white, black)) 
+       
+       
+                    
+textRect = visualtext[0].get_rect()
+textRect.height *= len(visualtext)
+textRect.center = (width // 2, height // 2)
 
 #--------------------------------------------------------------------------------------#
 #                                   PYGAME OBJECTS
 #--------------------------------------------------------------------------------------#
 class Particle():
-    def __init__(self, x, y, mass, size, charge, angle = r.uniform(0, m.pi*2)):
+    def __init__(self, x, y, mass, size, charge, angle = 0):
+        if angle == 0:
+            angle = r.uniform(0, m.pi*2)
         self.x = x; self.y = y
         self.mass = mass
         self.size = size
@@ -153,6 +174,7 @@ def addVectors(vector1, vector2):
 
 sprites = []
 destroyed = []
+photons = []
 # Collision function
 def collide(p1, p2):
 
@@ -168,7 +190,7 @@ def collide(p1, p2):
             sprites.remove(p1)
             sprites.remove(p2)
             midPos = ((p1.x + p2.x)/2, (p1.y + p2.y)/2)
-            sprites.append(Photon(midPos[0] + 2, midPos[1] + 2))
+            photons.append(Photon(midPos[0] + 2, midPos[1] + 2))
             destroyed.append(midPos)
             # print(midPos)
         else:
@@ -179,11 +201,7 @@ def collide(p1, p2):
             # Swap speeds in one line by constructing a tuple
             p1.speed, p2.speed = (p2.speed, p1.speed)
 
-#--------------------------------------------------------------------------------------#
-#                               OBJECT INSTANTIATION
-#--------------------------------------------------------------------------------------#
-
-for i in range(int(numParticles/2)):
+def addRandomParticles():
     mass = 5
     # NOTE: Here radius = mass
     p = Particle(r.randint(0, width), r.randint(0, height), mass, mass, 1)
@@ -191,55 +209,115 @@ for i in range(int(numParticles/2)):
     sprites.append(p)
     sprites.append(p2)
 
+def addPreciseParticles(coordinate):
+    # init of variables for a generic particle
+    mass = 5
+    angle1 = r.uniform(0, m.pi)
+    # i think this was for tangent math but i dont honestly know at this point
+    angle2 = angle1 - m.pi
+    # create particles
+    p1 = Particle(coordinate[0] + 10, coordinate[1] + 10, mass, mass, 1, angle1)
+    p2 = Particle(coordinate[0] - 10, coordinate[1] - 10, mass, mass, -1, angle2)
+
+    # append particles to list
+    sprites.append(p1)
+    sprites.append(p2)
+
+#--------------------------------------------------------------------------------------#
+#                               OBJECT INSTANTIATION
+#--------------------------------------------------------------------------------------#
+
+for i in range(int(numParticles/2)):
+    addRandomParticles()
+
 #--------------------------------------------------------------------------------------#
 #                                        MAIN
 #--------------------------------------------------------------------------------------#
 
+# variables for controlling display+
 frame = 0
-photons = 1
+displayParticles = 1
+displayPhotons = 1
+displayInactive = 1
+
 # Main loop
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
         if event.type == pygame.KEYDOWN:
+
+            # Controlling visuals
+            if event.key == pygame.K_i:
+                displayParticles *= -1
+            if event.key == pygame.K_p:
+                displayPhotons *= -1
+            if event.key == pygame.K_o:
+                displayInactive *= -1
+
+            # Controlling physics
             if event.key == pygame.K_SPACE:
-                photons *= -1
+                addRandomParticles()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            addPreciseParticles(pos)   
 
     # Wipes screen every time to avoid clipping and stuff
     screen.fill(black)
 
+    # Control the behaviour of particles
     for i, sprite in enumerate(sprites):
-        sprite.display()
-        sprite.bounce()
+        
 
         for particle in sprites[i+1:]:
-            if sprite.size > 0 and particle.size > 0: 
-                collide(sprite, particle)
+            # if sprite.size > 0 and particle.size > 0: 
+            collide(sprite, particle)
+
+        sprite.bounce()
+        sprite.move()
+
+        # particle display control
+        if displayParticles > 0:
+            sprite.display()
+    
+    # Code for controlling the behaviour of photons
+    for i, quanta in enumerate(photons):
 
         for point in destroyed:
-            for particle in sprites:
+            for particle in photons:
+                # if a particle meets a point where it can become matter
                 if particle.size == 0 and (int(particle.x), int(particle.y)) == (int(point[0]), int(point[1])):
+                    # remove the point from the lists
                     destroyed.remove(point)
-                    sprites.remove(particle)
+                    photons.remove(particle)
+
+                    # debug
                     print(particle, end='')
                     print('at: ' + str((int(particle.x), int(particle.y))) + ' and the destroyed point it hit is: ' + str((int(point[0]), int(point[1]))))
-                    mass = 5
-                    angle1 = r.uniform(0, m.pi)
-                    angle2 = angle1 - m.pi
-                    diff = point
-                    p1 = Particle(point[0] + 10, point[1] + 10, mass, mass, 1, angle1)
-                    p2 = Particle(point[0] - 10, point[1] - 10, mass, mass, -1, angle2)
-                    sprites.append(p1)
-                    sprites.append(p2)
-                    
+        
+                    addPreciseParticles(point)
+            
+            # control deadzone display
+            if displayInactive > 0:
+                gfxdraw.pixel(screen, int(point[0]), int(point[1]), white)
+        
+        # i made code that draws the trails but this snips it and you can change the inequality to make photons have tails
+        if len(quanta.bumps) > 1:
+            quanta.bumps.remove(quanta.bumps[0])
 
-        if sprite.size == 0:
-            if len(sprite.bumps) > 1:
-                sprite.bumps.remove(sprite.bumps[0])
+        quanta.bounce()
+        quanta.move()
 
-        sprite.move()
-    
+        # control photon display
+        if displayPhotons > 0:
+            quanta.display()
+
+    for i in range(len(visualtext)):
+        screen.blit(visualtext[i], (0, 24*i))
+
+    for i in reversed(range(len(physicstext))):
+        screen.blit(physicstext[i], (0, height - 24*(i + 1)))
+
     # Display graphics
     pygame.display.flip()
     clock.tick(60)
