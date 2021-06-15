@@ -1,3 +1,5 @@
+# py new backup 4
+
 import pygame
 import math as m
 pygame.init()
@@ -13,7 +15,6 @@ green = (0, 255, 0)
 Z = 79
 N = 118
 A = Z + N
-radius = 1
 EK = 5
 
 # Other things
@@ -22,9 +23,9 @@ i, j = 0, 2
 frame = 0
 elements = ["Hydrogen", "Helium", "Lithium", "Beryllium", "Boron", "Carbon", "Nitrogen", "Oxygen", "Fluorine", "Neon", "Sodium", "Magnesium", "Aluminium", "Silicon", "Phosphorus", "Sulfur", "Chlorine", "Argon", "Potassium", "Calcium", "Scandium", "Titanium", "Vanadium", "Chromium", "Manganese", "Iron", "Cobalt", "Nickel", "Copper", "Zinc", "Gallium", "Germanium", "Arsenic", "Selenium", "Bromine", "Krypton", "Rubidium", "Strontium", "Yttrium", "Zirconium", "Niobium", "Molybdenum", "Technetium", "Ruthenium", "Rhodium", "Palladium", "Silver", "Cadmium", "Indium", "Tin", "Antimony", "Tellurium", "Iodine", "Xenon", "Caesium", "Barium", "Lanthanum", "Cerium", "Praseodymium", "Neodymium", "Promethium", "Samarium", "Europium", "Gadolinium", "Terbium", "Dysprosium", "Holmium", "Erbium", "Thulium", "Ytterbium", "Lutetium", "Hafnium", "Tantalum", "Tungsten", "Rhenium", "Osmium", "Iridium", "Platinum", "Gold", "Mercury", "Thallium", "Lead", "Bismuth", "Polonium", "Astatine", "Radon", "Francium", "Radium", "Actinium", "Thorium", "Protactinium", "Uranium", "Neptunium", "Plutonium", "Americium", "Curium", "Berkelium", "Californium", "Einsteinium", "Fermium", "Mendelevium", "Nobelium", "Lawrencium", "Rutherfordium", "Dubnium", "Seaborgium", "Bohrium", "Hassium", "Meitnerium", "Darmstadtium", "Roentgenium", "Copernicium", "Nihonium", "Flerovium", "Moscovium", "Livermorium", "Tennessine", "Oganesson", "None"]
 myfont = pygame.font.SysFont('Lucida Console', 20)
-showKE = True
+showF = False
 fontL = pygame.font.SysFont('Lucida Console', 20)
-fontS = pygame.font.SysFont('Lucida Console', 12)
+fontS = pygame.font.SysFont('Lucida Console', 14)
 
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Rutherford Scattering')
@@ -90,6 +91,74 @@ def drawTriangles(x):
 
 
 
+# Alpha particles
+speed = 1
+
+class particle:
+    def __init__(self):
+        self.particles = 0
+        self.deleteParticles = False
+        self.velocity = m.sqrt(2*joules(EK)/(6.64216/10**27)) #m/s
+        self.force = 0
+        
+    def shoot(self):
+        if px(d) < height/2:         
+            if self.particles != 0:
+                self.deleteParticles = True
+            self.particles += 1
+            self.particleY = height
+            self.velocity = pxVel(m.sqrt(2*joules(EK)/(6.64216/10**27))) #m/s
+            self.acceleration = pxAcc(-(self.velocity/pxVel(1)) ** 2 / (2 * ((height/px(1)) / 2 - d)))
+    
+    def calcForce(self):
+        #for i, a in enumerate (self.x):
+            #x, y = width / 2, height / 2 - self.particleY    # px
+            #h = m.hypot(x,y) / px(1)  # m # converted from px
+            f = height / 2 - self.particleY
+
+            self.force = 4.6141551/10**28 * Z / (f ** 2)  # kg-m/s2 # 8.9875517923 * 10**9 * 2 * (1.602176634/10**19)**2 * Z / (h ** 2) # k 2e Ze / r^2 # uwu should be double?
+            
+    def drawForce(self):
+        #for i, a in enumerate(self.x):
+            end = (width/2,self.particleY+pxAcc(self.force)*10**58.9)
+            pygame.draw.line(screen,red,(width/2,self.particleY),end)
+            pygame.draw.line(screen,red,end,(end[0] - 4, end[1] - 4), 2)
+            pygame.draw.line(screen,red,end,(end[0] + 4, end[1] - 4), 2)
+
+            textsurface = fontS.render("F = " + str(round(currentForce*10**30,2)) + " x 10-30 N", False, (red))  #(str(abs(round(m.hypot(self.vX[i],self.vY[i]),2))) + " m/s", False, (white))
+            screen.blit(textsurface, (width/2+10, self.particleY))
+
+
+    def display(self):
+        if self.deleteParticles:
+            self.particles = 0
+            self.velocity = pxVel(m.sqrt(2*joules(EK)/(6.64216/10**27)))
+            self.deleteParticles = False
+        elif 0 < self.particleY < 605:
+            if d - radius < 2.5/10**15 and self.velocity<=1:
+                global variables
+                variables["Protons"] += 2
+                variables["Neutrons"] += 2
+                self.deleteParticles = True
+                displayEvent('The strong force binds protons and neutrons together.')
+                displayEvent('It decreases to insignificance at distances beyond')
+                displayEvent('2.5 femtometres.')
+            else:
+                for i in range(speed):
+                    if Z != 0: self.velocity += self.acceleration
+                    self.particleY -= self.velocity
+                pygame.draw.circle(screen, red, (width / 2, self.particleY), 2)
+        else:
+            self.deleteParticles = True
+            
+    def check(self):
+        if self.particles != 0: return True
+        else: 
+            self.velocity = pxVel(m.sqrt(2*joules(EK)/(6.64216/10**27)))
+            return False
+
+
+
 def displayData(data):
     global text
     textsurface = fontL.render(data, False, (white))
@@ -105,65 +174,43 @@ def displayInstructions(instructions):
     screen.blit(textsurface, (text))
     text = (x, text[1] - 30)
 
-# Alpha particles
-speed = 1
+events = []
+eventClock = []
 
-class particle:
-    def __init__(self):
-        self.particles = 0
-        self.deleteParticles = False
-        self.velocity = m.sqrt(2*joules(EK)/(6.64216/10**27)) #m/s
+def displayEvent(event):
+    if events.count(event) == 0:
+        events.append(event)
+        eventClock.append(1)
+def displayEvents():
+    if events != []:
+        eventRemove = []
+        for i, item in enumerate(events):
+            typeEvent(item)
+            eventClock[i] += 1
+            if eventClock[i] == 350:
+                eventRemove.append(i)
+        if eventRemove != []:
+            for item in reversed(eventRemove):
+                events.pop(item)
+                eventClock.pop(item)
+            eventRemove = []
 
-        
-    def shoot(self):
-        if self.particles != 0:
-            self.deleteParticles = True
-        self.particles += 1
-        self.particleY = height
-        self.velocity = pxVel(m.sqrt(2*joules(EK)/(6.64216/10**27))) #m/s
-        self.acceleration = pxAcc(-(self.velocity/pxVel(1)) ** 2 / (2 * ((height/px(1)) / 2 - d)))
+def typeEvent(event):
+    global text
+    x = text[0]
+    text = (text[0]-len(event)*8, text[1])
+    textsurface = fontS.render(event, False, (white))
+    screen.blit(textsurface, (text))
+    text = (x, text[1] + 15)
     
-    def calcForce(self):
-        #for i, a in enumerate (self.x):
-            #x, y = width / 2, height / 2 - self.particleY    # px
-            #h = m.hypot(x,y) / px(1)  # m # converted from px
-            f = height / 2 - self.particleY
 
-            self.force = 4.6141551/10**28 * Z / (f ** 2)  # kg-m/s2 # 8.9875517923 * 10**9 * 2 * (1.602176634/10**19)**2 * Z / (h ** 2) # k 2e Ze / r^2 # uwu should be double?
-            
-    def drawForce(self):
-        #for i, a in enumerate(self.x):
-            end = (width/2,self.particleY+pxAcc(self.force)*10**58.9)
-            pygame.draw.line(screen,red,(width/2,self.particleY),end)
-            pygame.draw.circle(screen,red,end,1)
-
-
-    def display(self):
-        if self.deleteParticles:
-            self.particles = 0
-            self.velocity = pxVel(m.sqrt(2*joules(EK)/(6.64216/10**27)))
-            self.deleteParticles = False
-        elif 0 < self.particleY < 605:
-            for i in range(speed):
-                if Z != 0: self.velocity += self.acceleration
-                self.particleY -= self.velocity
-            pygame.draw.circle(screen, red, (width / 2, self.particleY), 5)
-            #if showKE:
-            #    textsurface = fontS.render(str(sfRound((6.64216/10**27)*(self.velocity/pxVel(1))**2/2/joules(1))) + " m/s", False, (white))  #(str(abs(round(m.hypot(self.vX[i],self.vY[i]),2))) + " m/s", False, (white))
-            #    screen.blit(textsurface, (width/2-25, self.particleY-20))
-        else:
-            self.deleteParticles = True
-            
-    def check(self):
-        if self.particles != 0: return True
-        else: 
-            self.velocity = pxVel(m.sqrt(2*joules(EK)/(6.64216/10**27)))
-            return False
 
 particle = particle()
 
 
-
+displayEvent('1 pixel = 1 x 10^-15 metres')
+displayEvent('1 second = 3 x 10^-20 seconds')
+displayEvent('[s] to show scale again')
 
 while not done:
     for event in pygame.event.get():
@@ -183,8 +230,14 @@ while not done:
                 particle.shoot()
             if event.key == pygame.K_z:
                 show = not show
+            if event.key == pygame.K_x:
+                showF = not showF
+            if event.key == pygame.K_s:
+                displayEvent('1 pixel = 1 x 10^15 metres')
+                displayEvent('1 second = 3 x 10^-20 seconds')
+                displayEvent('[s] to show scale again')
             if event.key == pygame.K_BACKSPACE:
-                print(radius, (height / 2 - radius))
+                print(events.count('1 pixel = 1 x 10^-15 metres'))
 
     # Variable fixing
     if variables.get("Protons") > 118: variables["Protons"] = 118
@@ -213,30 +266,34 @@ while not done:
 
     if particle.check():
         particle.calcForce()
-        particle.drawForce()
         particle.display()
+        if showF: particle.drawForce()
 
     # UI
     drawTriangles(20)
     
     # Display text
-    if frame%5 == 0 or round(particle.velocity,2) == 0:
+    if frame%7 == 0 or round(particle.velocity,2) == 0:
         currentKE = sfRound(round((6.64216/10**27)*(particle.velocity/pxVel(1))**2/2/joules(1),2)) + " MeV"
+        currentForce = particle.force
         frame = 1
     
     text = (20, 20)
     displayData('Protons: ' + str(Z) + '')
     displayData('Neutrons: ' + str(N) + '')
     displayData('Atom: ' + elements[Z-1] + "-" + str(A))
-    displayData('Nuclear Radius: ' + str(sfRound(radius)) + ' m')
-    displayData('Closest Approach: ' + str(sfRound(d)) + ' m')
+    displayData('Nuclear Radius: ' + str(round(radius*10**15, 2)) + ' x 10-15 m')
+    displayData('Closest Approach: ' + str(sfRound(d*10**15)) + ' x 10-15 m')
     #displayData('Initial KE: ' + str(EK) + '.0 MeV')
     displayData('Particle KE: ' +str(currentKE))
-    
+
+    text = (width - 20, 20)
+    displayEvents()
 
     text = (770, 550)
-    displayInstructions('Spacebar: Alpha particle')
-    displayInstructions('Z: Toggle boundary')
+    displayInstructions('Spacebar: Alpha particle')   
+    displayInstructions('X: Toggle force vector')
+    displayInstructions('Z: Toggle boundary') 
 
     frame+=1
 
