@@ -14,4 +14,4 @@ If double clicking the file doesn't work (ie. it opens up a text editor), right 
 
 Alternatively, if you don't want to install python, .exe's of each simulation will be in the releases:
 
-      https://github.com/AdamHolan/Physics-PBL-Simulations/releases
+      https://github.com/AdamHolan/Physics-PBL-Simulations/releases/tag/0.2
